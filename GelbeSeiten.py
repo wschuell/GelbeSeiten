@@ -25,18 +25,25 @@ def get_information(soup):
         else:
             phone_numbers.append("")
 
+def get_ergebnisse(search_str,soup_obj):
+    h1l = soup_obj.findAll('h1',{'class':'mb-0'})
+    assert len(h1l) == 1
+    return int(h1l[0].text.split(' Ergebnisse')[0].replace('.',''))
 
 url = "https://www.herold.at/gelbe-seiten"
 city = ""
 url_end = "/was_"
 searchparam = ""
 
+arg = ""
+
 for x in sys.argv:
     if sys.argv.index(x) == 0:
         continue
-    if sys.argv.index(x) == 1:
-        city = "/" + x
-        url += city
+    if sys.argv.index(x) == 1 :
+        if x != 'all':
+            city = "/" + x
+            url += city
         url += url_end
         continue
     url += x
@@ -50,17 +57,27 @@ standard_url = url
 
 index = 2
 
+print('searchparam',searchparam)
+failure_str = """<p class="alert alert-success">""".format(arg=searchparam)
+
+
+
 while True:
     breakall = False
     f = urllib.urlopen(url)
+    print(url)
     myfile = f.read()
     soup = BeautifulSoup(myfile, 'html.parser')
+    erg = get_ergebnisse(search_str=searchparam,soup_obj=soup,)
+    print(erg)
+    pages = -(int(-erg/15))
+    print(pages)
     # if soup.findAll("div", id="noresult") is None:
     #     break
     bla = soup.findAll("h1")
     if bla is not None:
         for x in bla:
-            if x.next.startswith("Hoppla!"):
+            if x.next.startswith("Hoppla!") or failure_str in unicode(soup).encode('utf-8') or index>pages+1:
                 breakall = True
                 break
         if (breakall):
